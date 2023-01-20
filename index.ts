@@ -1,0 +1,111 @@
+import express, { Request, Response } from "express";
+import * as dotenv from "dotenv";
+dotenv.config();
+import * as bodyParser from "body-parser";
+import cors from "cors";
+import { Queue, QueueEvents, Worker } from "bullmq";
+
+const app = express();
+const port = process.env.PORT;
+const SD = process.env.SD;
+const defaultPayload = {
+  prompt: process.env.DEFAULT_PROMPTS,
+  negative_prompt: process.env.DEFAULT_NEGATIVE_PROMPTS,
+  sampler_index: process.env.DEFAULT_SAMPLER,
+  steps: process.env.DEFAULT_STEPS,
+  cfg_scale: process.env.DEFAULT_CFG_SCALE,
+  sd_model_checkpoint: process.env.DEFAULT_CHECKPOINT,
+};
+const jsonParser = bodyParser.json();
+const allowedOrigins: string[] = ["waifus.nemusona.com", "localhost:3000"];
+const options: cors.CorsOptions = {
+  origin: allowedOrigins,
+};
+app.use(cors(options));
+
+const queue = new Queue("gen", {
+  connection: {
+    host: process.env.REDIS_URL,
+    port: Number(process.env.REDIS_PORT),
+    password: process.env.REDIS_PASS,
+  },
+});
+
+const queueEvents = new QueueEvents("gen", {
+  connection: {
+    host: process.env.REDIS_URL,
+    port: Number(process.env.REDIS_PORT),
+    password: process.env.REDIS_PASS,
+  },
+});
+
+const worker = new Worker(
+  "gen",
+  async (job) => {
+    const aaa = await fetch(`${SD}/sdapi/v1/txt2img`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(job.data),
+    });
+    if (aaa.status === 200) {
+      const json = await aaa.json();
+      const base64 = json.images[0];
+      return base64;
+    } else {
+      throw new Error("Server Error");
+    }
+  },
+  {
+    concurrency: 1,
+    connection: {
+      host: process.env.REDIS_URL,
+      port: Number(process.env.REDIS_PORT),
+      password: process.env.REDIS_PASS,
+    },
+  }
+);
+
+app.get("/", (req: Request, res: Response) => {
+  return res.status(200).send("API is Alive");
+});
+
+app.get("/queue", async (req: Request, res: Response) => {
+    const count = await queue.getJobCounts();
+    return res.status(200).send(count)
+})
+
+app.post(
+  "/generate",
+  jsonParser,
+  async (req: Request, res: express.Response) => {
+    const payload = { ...defaultPayload };
+    try {
+      const positive = req.body.prompt;
+      const negative = req.body.negative;
+      if (positive) {
+        payload.prompt += `, ${positive.toString()}`;
+      }
+      if (negative) {
+        payload.negative_prompt += `, ${negative.toString()}`;
+      }
+      const job = await queue.add("prompts", payload, {
+        delay: 500,
+        removeOnComplete: true,
+        removeOnFail: true,
+      });
+      const base64 = await job.waitUntilFinished(queueEvents, 60000);
+      const buffer = Buffer.from(base64, "base64");
+      res.set({ "Content-Type": "image/png" });
+      return res.status(200).send(buffer);
+    } catch (error) {
+      return res.status(500).send("Server Error");
+    }
+  }
+);
+
+app.listen(port, () => {
+  console.log(`Running on port ${port}`);
+});
