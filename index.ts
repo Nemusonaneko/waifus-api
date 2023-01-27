@@ -92,7 +92,7 @@ app.post(
         payload.negative_prompt += `, ${negative.toString()}`;
       }
       const job = await queue.add("prompts", payload, {
-        delay: 500,
+        delay: 100,
         removeOnComplete: true,
         removeOnFail: true,
       });
