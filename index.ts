@@ -15,7 +15,7 @@ const defaultPayload = {
   steps: process.env.DEFAULT_STEPS,
   cfg_scale: process.env.DEFAULT_CFG_SCALE,
   sd_model_checkpoint: process.env.DEFAULT_CHECKPOINT,
-  denoising_strength: process.env.DEFAULT_DENOISE_STRENGTH
+  denoising_strength: process.env.DEFAULT_DENOISE_STRENGTH,
 };
 const jsonParser = bodyParser.json();
 const allowedOrigins: string[] = [
@@ -87,6 +87,12 @@ app.post(
   async (req: Request, res: express.Response) => {
     const payload = { ...defaultPayload };
     try {
+      const count = await queue.getJobCounts();
+      const amtInQueue =
+        Number(count.active) + Number(count.delayed) + Number(count.waiting);
+      if (amtInQueue && amtInQueue >= 40) {
+        return res.status(503).send("Overloaded");
+      }
       const positive = req.body.prompt;
       const negative = req.body.negative;
       if (positive) {
