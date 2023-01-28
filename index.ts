@@ -15,9 +15,13 @@ const defaultPayload = {
   steps: process.env.DEFAULT_STEPS,
   cfg_scale: process.env.DEFAULT_CFG_SCALE,
   sd_model_checkpoint: process.env.DEFAULT_CHECKPOINT,
+  denoising_strength: process.env.DEFAULT_DENOISE_STRENGTH
 };
 const jsonParser = bodyParser.json();
-const allowedOrigins: string[] = ["waifus.nemusona.com", "localhost:3000"];
+const allowedOrigins: string[] = [
+  "https://waifus.nemusona.com",
+  "localhost:3000",
+];
 const options: cors.CorsOptions = {
   origin: allowedOrigins,
 };
@@ -73,9 +77,9 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.get("/queue", async (req: Request, res: Response) => {
-    const count = await queue.getJobCounts();
-    return res.status(200).send(count)
-})
+  const count = await queue.getJobCounts();
+  return res.status(200).send(count);
+});
 
 app.post(
   "/generate",
@@ -92,7 +96,7 @@ app.post(
         payload.negative_prompt += `, ${negative.toString()}`;
       }
       const job = await queue.add("prompts", payload, {
-        delay: 500,
+        delay: 100,
         removeOnComplete: true,
         removeOnFail: true,
       });
