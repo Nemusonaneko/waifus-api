@@ -90,7 +90,7 @@ app.post(
       const count = await queue.getJobCounts();
       const amtInQueue =
         Number(count.active) + Number(count.delayed) + Number(count.waiting);
-      if (amtInQueue && amtInQueue >= 40) {
+      if (amtInQueue && amtInQueue >= 50) {
         return res.status(503).send("Overloaded");
       }
       const positive = req.body.prompt;
