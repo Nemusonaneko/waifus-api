@@ -87,12 +87,6 @@ app.post(
   async (req: Request, res: express.Response) => {
     const payload = { ...defaultPayload };
     try {
-      const count = await queue.getJobCounts();
-      const amtInQueue =
-        Number(count.active) + Number(count.delayed) + Number(count.waiting);
-      if (amtInQueue && amtInQueue >= 40) {
-        return res.status(503).send("Overloaded");
-      }
       const positive = req.body.prompt;
       const negative = req.body.negative;
       if (positive) {
@@ -102,7 +96,6 @@ app.post(
         payload.negative_prompt += `, ${negative.toString()}`;
       }
       const job = await queue.add("prompts", payload, {
-        delay: 100,
         removeOnComplete: true,
         removeOnFail: true,
       });
