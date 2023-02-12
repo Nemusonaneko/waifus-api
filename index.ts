@@ -87,6 +87,12 @@ app.post(
   async (req: Request, res: express.Response) => {
     const payload = { ...defaultPayload };
     try {
+      const result = await queue.getJobCounts();
+      const count =
+        Number(result.active) + Number(result.delayed) + Number(result.waiting);
+      if (count > 30) {
+        return res.status(503).send("Cannot process request");
+      }
       const positive = req.body.prompt;
       const negative = req.body.negative;
       if (positive) {
