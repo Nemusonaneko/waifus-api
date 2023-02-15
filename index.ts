@@ -9,8 +9,8 @@ const app = express();
 const port = process.env.PORT;
 const SD = process.env.SD;
 const defaultPayload = {
-  prompt: process.env.DEFAULT_PROMPTS,
-  negative_prompt: process.env.DEFAULT_NEGATIVE_PROMPTS,
+  prompt: process.env.DEFAULT_PROMPT,
+  negative_prompt: process.env.DEFAULT_NEGATIVE_PROMPT,
   sampler_index: process.env.DEFAULT_SAMPLER,
   steps: process.env.DEFAULT_STEPS,
   cfg_scale: process.env.DEFAULT_CFG_SCALE,
@@ -85,31 +85,50 @@ app.post(
   "/generate",
   jsonParser,
   async (req: Request, res: express.Response) => {
+    const start = Number(new Date());
+    const result = await queue.getJobCounts();
+    const count =
+      Number(result.active) + Number(result.delayed) + Number(result.waiting);
+    console.log(`request received. queue: ${count}`);
     const payload = { ...defaultPayload };
     try {
-      const result = await queue.getJobCounts();
-      const count =
-        Number(result.active) + Number(result.delayed) + Number(result.waiting);
-      if (count > 30) {
+      if (count > 35) {
         return res.status(503).send("Cannot process request");
       }
       const positive = req.body.prompt;
-      const negative = req.body.negative;
+      const negative_prompt = req.body.negative_prompt;
+      const cfg_scale = req.body.cfg_scale;
+      const denoising_strength = req.body.denoising_strength;
       if (positive) {
         payload.prompt += `, ${positive.toString()}`;
       }
-      if (negative) {
-        payload.negative_prompt += `, ${negative.toString()}`;
+      if (negative_prompt) {
+        payload.negative_prompt += `, ${negative_prompt.toString()}`;
+      }
+      if (cfg_scale) {
+        payload.cfg_scale = cfg_scale;
+      }
+      if (denoising_strength) {
+        payload.denoising_strength = denoising_strength;
       }
       const job = await queue.add("prompts", payload, {
         removeOnComplete: true,
         removeOnFail: true,
       });
-      const base64 = await job.waitUntilFinished(queueEvents, 60000);
+      const base64 = await job.waitUntilFinished(queueEvents, 120000);
       const buffer = Buffer.from(base64, "base64");
       res.set({ "Content-Type": "image/png" });
+      const end = Number(new Date());
+      console.log(
+        `success. elapsed: ${end - start}ms. queue when started: ${count}`
+      );
       return res.status(200).send(buffer);
     } catch (error) {
+      console.log(error);
+      const end = Number(new Date());
+      console.log(
+        `failed. elapsed: ${end - start}ms. queue when started: ${count}`
+      );
       return res.status(500).send("Server Error");
     }
   }
