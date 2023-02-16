@@ -72,6 +72,14 @@ const worker = new Worker(
   }
 );
 
+worker.on("completed", () => {
+  console.log("Job completed");
+});
+
+worker.on("failed", () => {
+  console.log("Job failed");
+});
+
 app.get("/", (req: Request, res: Response) => {
   return res.status(200).send("API is Alive");
 });
@@ -81,6 +89,9 @@ app.get("/queue", async (req: Request, res: Response) => {
   return res.status(200).send(count);
 });
 
+let totalReq = 0;
+let totalElapsed = 0;
+let totalSuccess = 0;
 app.post(
   "/generate",
   jsonParser,
@@ -119,15 +130,32 @@ app.post(
       const buffer = Buffer.from(base64, "base64");
       res.set({ "Content-Type": "image/png" });
       const end = Number(new Date());
+      const elapsed = end - start;
+      totalReq++;
+      totalSuccess++;
+      totalElapsed += elapsed;
       console.log(
-        `success. elapsed: ${end - start}ms. queue when started: ${count}`
+        `success. elapsed: ${elapsed}ms. avg elapsed: ${(
+          totalElapsed / totalReq
+        ).toFixed(0)}ms. success rate: ${(
+          (totalSuccess / totalReq) *
+          100
+        ).toFixed(2)}%`
       );
       return res.status(200).send(buffer);
     } catch (error) {
       console.log(error);
       const end = Number(new Date());
+      const elapsed = end - start;
+      totalReq++;
+      totalElapsed += elapsed;
       console.log(
-        `failed. elapsed: ${end - start}ms. queue when started: ${count}`
+        `failed. elapsed: ${elapsed}ms. avg elapsed: ${(
+          totalElapsed / totalReq
+        ).toFixed(0)}ms. success rate: ${(
+          (totalSuccess / totalReq) *
+          100
+        ).toFixed(2)}%`
       );
       return res.status(500).send("Server Error");
     }
