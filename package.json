@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "start": "nodemon index.ts"
+    "api": "ts-node api.ts",
+    "worker": "ts-node worker.ts"
   },
   "author": "",
   "license": "ISC",
