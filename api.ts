@@ -131,11 +131,11 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
 
 /// Get queue from DB
 app.get(
-  "/queue:model",
+  "/queue/:model",
   async (req: Request, res: Response, next: NextFunction) => {
     const model = req.params.model.toLowerCase();
     const count = await getQueue(model);
-    if (!count) {
+    if (!count && count !== 0) {
       // Revert if incorrect model
       return res.sendStatus(400);
     } else {
@@ -146,16 +146,14 @@ app.get(
 
 /// Send request to queue
 app.post(
-  "/generate:model",
+  "/generate/:model",
   jsonParser,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       /// Get queue
       const model = req.params.model.toLowerCase();
-
-      const count = await getQueue("model");
-
-      if (!count) {
+      const count = await getQueue(model);
+      if (!count && count !== 0) {
         /// Revert if incorrect model
         return res.sendStatus(400);
       } else if (count > Number(queueLimit)) {
