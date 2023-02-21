@@ -10,8 +10,11 @@ const port = process.env.PORT;
 /// URL to stable diffusion install
 const SD = process.env.SD;
 
+/// Model to work on
+const model = process.env.MODEL;
+
 const worker = new Worker(
-  "nemu",
+  model,
   async (job) => {
     /// Make request to AUTOMATIC1111 local install API
     const aaa = await fetch(`${SD}sdapi/v1/txt2img`, {
