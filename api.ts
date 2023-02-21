@@ -217,8 +217,8 @@ app.post(
 
       /// Add to queue
       const job = await queue.add(model, payload, {
-        removeOnComplete: true,
-        removeOnFail: true,
+        removeOnComplete: Number(queueLimit),
+        removeOnFail: Number(queueLimit),
         delay: Number(queueDelay),
       });
 
