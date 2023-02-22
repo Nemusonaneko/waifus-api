@@ -10,7 +10,7 @@ const app = express();
 const port = process.env.PORT;
 const allowedOrigins: string[] = ["https://waifus.nemusona.com"];
 const options: cors.CorsOptions = {
-  origin: "*",
+  origin: allowedOrigins,
 };
 app.use(cors(options));
 
