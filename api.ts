@@ -83,6 +83,7 @@ const defaults = {
     cfg_scale: 7,
     sd_model_checkpoint: "anything-v4.0.ckpt",
     denoising_strength: 0,
+    seed: -1,
   },
   aom: {
     prompt: "",
@@ -93,6 +94,7 @@ const defaults = {
     cfg_scale: 5,
     sd_model_checkpoint: "aom3.safetensors",
     denoising_strength: 0.5,
+    seed: -1,
   },
   counterfeit: {
     prompt: "((masterpiece,best quality))",
@@ -103,6 +105,7 @@ const defaults = {
     cfg_scale: 10,
     sd_model_checkpoint: "counterfeit-v2.5.safetensors",
     denoising_strength: 0.5,
+    seed: -1,
   },
 };
 
@@ -171,6 +174,7 @@ app.post(
       const negative_prompt = req.body.negative_prompt;
       const cfg_scale = req.body.cfg_scale;
       const denoising_strength = req.body.denoising_strength;
+      const seed = req.body.seed;
       if (positive) {
         payload.prompt += `, ${positive.toString()}`;
       }
@@ -182,6 +186,9 @@ app.post(
       }
       if (denoising_strength) {
         payload.denoising_strength = denoising_strength;
+      }
+      if (seed) {
+        payload.seed = seed;
       }
 
       let queue: Queue<any, any, string>;
