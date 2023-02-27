@@ -30,8 +30,10 @@ const worker = new Worker(
     if (aaa.status === 200) {
       /// Pass base64 if successful
       const json = await aaa.json();
-      const base64 = json.images[0];
-      return base64;
+      return {
+        base64: json.images[0],
+        seed: JSON.parse(json.info).seed,
+      };
     } else {
       /// Throw error if unsuccessful
       throw new Error("Server Error");

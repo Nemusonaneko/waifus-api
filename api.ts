@@ -222,14 +222,22 @@ app.post(
         delay: Number(queueDelay),
       });
 
-      /// Get base64 response from worker
-      const base64 = await job.waitUntilFinished(
+      const result = await job.waitUntilFinished(
         queueEvent,
         Number(queueTimeout)
       );
 
-      /// Return base64 to client
-      return res.status(200).send(base64.toString());
+      return res.status(200).send(
+        JSON.stringify({
+          base64: result.base64,
+          positive: positive,
+          negative: negative_prompt,
+          cfg_scale: payload.cfg_scale,
+          denoising_strength: payload.denoising_strength,
+          model: model,
+          seed: result.seed,
+        })
+      );
     } catch (error) {
       return res.sendStatus(500);
     }
