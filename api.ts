@@ -77,7 +77,7 @@ const defaults = {
   anything: {
     prompt: "masterpiece, best quality",
     negative_prompt:
-      "EasyNegative, lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts,signature, watermark, username, blurry, artist name",
+      "EasyNegative, extra fingers,fewer fingers, lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts,signature, watermark, username, blurry, artist name",
     sampler_index: "DPM++ 2M Karras",
     steps: process.env.DEFAULT_STEPS,
     cfg_scale: 7,
@@ -86,7 +86,8 @@ const defaults = {
   },
   aom: {
     prompt: "",
-    negative_prompt: "EasyNegative, (worst quality, low quality:1.4)",
+    negative_prompt:
+      "EasyNegative, (worst quality, low quality:1.4), lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts,signature, watermark, username, blurry, artist name",
     sampler_index: "DPM++ SDE Karras",
     steps: process.env.DEFAULT_STEPS,
     cfg_scale: 5,
@@ -95,7 +96,8 @@ const defaults = {
   },
   counterfeit: {
     prompt: "((masterpiece,best quality))",
-    negative_prompt: "EasyNegative, extra fingers,fewer fingers",
+    negative_prompt:
+      "EasyNegative, extra fingers,fewer fingers, lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts,signature, watermark, username, blurry, artist name",
     sampler_index: "DPM++ 2M Karras",
     steps: process.env.DEFAULT_STEPS,
     cfg_scale: 10,
